@@ -17,9 +17,13 @@ Seurat (>= 2.3)
 
 -> To install from **R** or **Rstudio**, run the following code:
 
+(1) First, install package “devtools”:
 ```R
 if (!require("devtools"))
   install.packages("devtools")
+```
+(2) Then, install seqExplorer:
+```R
 devtools::install_github('dyxmvp/seqExplorer')
 ```
 -> To install from **HPC**, see this **[guide](HPC installing guide)** for more details.
