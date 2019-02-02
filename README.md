@@ -26,7 +26,7 @@ if (!require("devtools"))
 ```R
 devtools::install_github('dyxmvp/seqExplorer')
 ```
--> To install from **HPC**, see this **[guide](HPC installation guide.md)** for more details.
+-> To install from **HPC**, see this [guide](HPC installation guide.md) for more details.
 
 ## Getting Started
 
