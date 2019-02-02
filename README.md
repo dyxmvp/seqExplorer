@@ -10,7 +10,6 @@ These instructions will get you a copy of the software up and running on HPC or 
 ```
 R (>= 3.4)
 Drop-seq_tools (>= 2.0)
-Seurat (>= 2.3)
 ```
 
 ### Installing
