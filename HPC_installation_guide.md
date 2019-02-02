@@ -23,6 +23,7 @@ if (!require("devtools"))
 devtools::install_github('dyxmvp/seqExplorer')
 ```
 Type **"yes"** and enter, if the system asks:
+
 (1)
 ```sh
 Would you like to use a personal library instead? (yes/No/cancel)
