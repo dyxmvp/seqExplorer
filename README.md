@@ -44,4 +44,8 @@ seqExplorer()
 
 ## 3. License
 
-This software is licensed under the GPL-3. See the [LICENSE](LICENSE) file for more details.
+seq-Explorer is developed and maintained by Yanxiang Deng@[Rong Fan Lab](https://www.eng.yale.edu/fanlab/Rong_Fan_Group/Welcome.html), BME, Yale University. The software is licensed under the GPL-3.0. See the [LICENSE](LICENSE) file for more details.
+
+## 4. Contact
+
+seq-Explorer is hosted at [Github](https://github.com/dyxmvp/seqExplorer). Please e-mail [yanxiang.deng@yale.edu](mailto:yanxiang.deng@yale.edu) or submit pull requests from the [Github](https://github.com/dyxmvp/seqExplorer) with any questions about the software.
