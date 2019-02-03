@@ -6,7 +6,7 @@ Integrated and interactive software for single-cell RNA-seq data analysis.
 ![](https://github.com/dyxmvp/Demos/blob/master/seq-Explorer/demo3.gif)   |![](https://github.com/dyxmvp/Demos/blob/master/seq-Explorer/demo4.gif)
 
 
-## Installation
+## 1. Installation
 
 These instructions will get you a copy of the software up and running on HPC or local machine.
 
@@ -15,6 +15,7 @@ These instructions will get you a copy of the software up and running on HPC or 
 ```
 R (>= 3.4)
 Drop-seq_tools (>= 2.0)
+Seurat (>= 2.3)
 ```
 
 ### Installing
@@ -32,7 +33,7 @@ devtools::install_github('dyxmvp/seqExplorer')
 ```
 -> To install from **HPC**, see this [guide](HPC_installation_guide.md) for more details.
 
-## Getting Started
+## 2. Getting Started
 
 Enter commands in R or R studio:
 
@@ -41,6 +42,6 @@ library(seqExplorer)
 seqExplorer()
 ```
 
-## License
+## 3. License
 
 This software is licensed under the GPL-3. See the [LICENSE](LICENSE) file for more details.
