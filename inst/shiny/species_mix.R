@@ -184,7 +184,7 @@ mixServer <- function(input, output, session, fileRoot = NULL) {
   
   ns <- session$ns
 
-  volumes <- (c(Home = fs::path_home())) #(c("Current" = getwd())) #(c(Home = fs::path_home(), "R Installation" = R.home(), getVolumes()()))
+  volumes <- (c(Home = fs::path_home(), getVolumes()()))#volumes <- (c(Home = fs::path_home())) #(c("Current" = getwd())) #(c(Home = fs::path_home(), "R Installation" = R.home(), getVolumes()()))
   
   shinyFileChoose(input, "file_cell_bc_mix", roots = volumes, session = session, filetypes=c('', 'txt'))
   
