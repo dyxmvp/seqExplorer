@@ -339,8 +339,8 @@ cat("#!/bin/bash
 }
   
 # fastqtoSam.sh
-r1Path <- system(paste("find", seqPath, "-type f -size +1G -print | grep '1.fastq\|1.fq'"), intern = TRUE)
-r2Path <- system(paste("find", seqPath, "-type f -size +1G -print | grep '2.fastq\|2.fq'"), intern = TRUE)
+r1Path <- system(paste("find", seqPath, "-type f -size +1G -print | grep '1.fastq\\|1.fq'"), intern = TRUE)
+r2Path <- system(paste("find", seqPath, "-type f -size +1G -print | grep '2.fastq\\|2.fq'"), intern = TRUE)
 
 sh_head("fastqToSam", ncores, mem, timelimit, mailType, Email)
 cat(paste("java -jar ", picardPath, "/picard.jar", " \\", "\n", sep = ""),
