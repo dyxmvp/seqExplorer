@@ -847,7 +847,8 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
 
       setProgress(value = 0.65)
 
-      immune.combined <<- RunCCA(ctrl, stim, genes.use = genes.use, num.cc = input$cc_num)
+      immune.combined <<- RunCCA(ctrl, stim, genes.use = genes.use, num.cc = input$cc_num,
+                                add.cell.id1 = "C", add.cell.id2 = "S")
 
 
       setProgress(value = 1)
