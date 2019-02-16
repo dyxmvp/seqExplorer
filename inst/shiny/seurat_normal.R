@@ -1269,19 +1269,19 @@ seurat_normal_Server <- function(input, output, session, fileRoot = NULL) {
         Path_10x_add <- isolate(as.character(parseDirPath(volumes, input$normal_10x_add)))
         rawdata <- Read10X(data.dir = Path_10x_add)
       }
-
+      
       setProgress(value = 0.5)
       
-      if(all(unique(pbmc@meta.data$orig.ident) == isolate(as.character(input$project_name)))){
-        new_obj <- CreateSeuratObject(raw.data = rawdata, min.cells = input$min_cells, min.genes = input$min_genes, 
-                                      project = input$addName)
+      new_obj <- CreateSeuratObject(raw.data = rawdata, min.cells = input$min_cells, min.genes = input$min_genes, 
+                                    project = input$addName)
         
-        pbmc.combined <- MergeSeurat(object1 = pbmc, object2 = new_obj, add.cell.id1 = input$project_name, 
-                                     add.cell.id2 = input$addName, project = "Combined data")
+      if(length(unique(pbmc@meta.data$orig.ident)) == 1) {
+        pbmc.combined <- MergeSeurat(object1 = pbmc, object2 = new_obj, do.normalize = FALSE,
+                                     add.cell.id1 = pbmc@meta.data$orig.ident, add.cell.id2 = input$addName)
       }
       else{
-        pbmc.combined <- AddSamples(object = pbmc, new.data = rawdata, add.cell.id = input$addName, 
-                                    min.cells = input$min_cells, min.genes = input$min_genes)
+        pbmc.combined <- MergeSeurat(object1 = pbmc, object2 = new_obj, 
+                                     add.cell.id2 = input$addName, do.normalize = FALSE)
       }
       setProgress(value = 0.7)
       
