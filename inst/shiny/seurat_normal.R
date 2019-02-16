@@ -292,8 +292,8 @@ seurat_normal_UI <- function(id) {
                                                                    style = "width: 90%")
                                   )),
 
-                              box(title = "Assigning cell type identity to clusters", width = NULL, solidHeader = TRUE,
-                                  height = 580, status = "success",
+                              box(title = "Assigning cell type identity to clusters", width = NULL, 
+                                  solidHeader = TRUE, status = "success",
 
                                   uiOutput(ns("old_name_clusters")),
                                   textInput(ns("new_name_clusters"), "Assign new names (use ',' to separate): "),
@@ -301,6 +301,16 @@ seurat_normal_UI <- function(id) {
                                   withBusyIndicatorUI(icon_name = "clusters_names",
                                                       actionButton(ns("assign_names"),
                                                                    "Assign new names",
+                                                                   style = "width: 90%")
+                                  )
+                              ),
+                              
+                              box(title = "Compare with previous identities", width = NULL, 
+                                  solidHeader = TRUE, status = "info",
+
+                                  withBusyIndicatorUI(icon_name = "compare",
+                                                      actionButton(ns("compare_ids"),
+                                                                   "Compare with previous identities",
                                                                    style = "width: 90%")
                                   )
                               )
@@ -949,6 +959,9 @@ seurat_normal_Server <- function(input, output, session, fileRoot = NULL) {
       shinyjs::show("load_clusters")
       setProgress(value = 0.35)
 
+      # Stash identities for later
+      pbmc <<- StashIdent(object = pbmc, save.name = "ClusterNames_old")
+      
       pbmc <<- FindClusters(object = pbmc, reduction.type = "pca", dims.use = input$cluster_dim1:input$cluster_dim2,
                            resolution = input$res, print.output = 0, save.SNN = TRUE)
 
@@ -1011,7 +1024,9 @@ seurat_normal_Server <- function(input, output, session, fileRoot = NULL) {
       current.cluster.ids <- input$clusters_old_name
       new.cluster.ids <- input$new_name_clusters
       new.cluster.ids <- unlist(strsplit(new.cluster.ids, split = ",|, "))
-
+      
+      # Stash identities for later
+      pbmc <<- StashIdent(object = pbmc, save.name = "ClusterNames_old")
       pbmc@ident <- plyr::mapvalues(x = pbmc@ident, from = current.cluster.ids, to = new.cluster.ids)
 
       pbmc <<- pbmc
@@ -1056,6 +1071,35 @@ seurat_normal_Server <- function(input, output, session, fileRoot = NULL) {
 
   }
   )# Assign new names END
+  
+  # Compare with old identities
+  observeEvent(input$compare_ids, {
+    
+    output$tsne_plot1 <- renderUI({
+      withSpinner(plotOutput(ns("plot_tsne1"), height = "750px"), type = getOption("spinner.type", default = 4))
+    }
+    )
+    
+    withProgress(message = "Plotting TSNE ...",{
+      
+      shinyjs::show("load_compare")
+      setProgress(value = 0.35)
+      
+      output$plot_tsne1 <- renderPlot({
+        
+        plot1_compare <- TSNEPlot(object = pbmc, do.return = TRUE, 
+                          no.legend = TRUE, do.label = TRUE, pt.size = 1.5)
+        plot2_compare <- TSNEPlot(object = pbmc, do.return = TRUE, group.by = "ClusterNames_old", 
+                          no.legend = TRUE, do.label = TRUE, pt.size = 1.5)
+        plot_grid(plot1_compare, plot2_compare)
+        
+      })
+      
+      setProgress(value = 1)
+      shinyjs::hide("load_compare")
+      shinyjs::show("check_compare")
+    })
+  })# Compare with old identities END
 
   # Cluster biomarkers
   observeEvent(input$viz_diff_genes, {
