@@ -354,6 +354,7 @@ cat(paste("java -jar ", picardPath, "/picard.jar", " \\", "\n", sep = ""),
 # Drop_seq.sh (Note: need to add "--runThreadN 20" in the drop-seq_tools-2.0.0)
 sh_head("Drop_seq", ncores, mem, timelimit, mailType, Email)
 cat(paste(drop_seqPath, "/Drop-seq_alignment.sh ", "-o ", outputPath, " \\", "\n", sep = ""),
+    paste("-t ", outputPath, " \\", "\n", sep = ""),
     paste("-g ", refGenPath, " \\", "\n", sep = ""),
     paste("-r ", refGenPath, "/", list.files(path = refGenPath, pattern = "\\.fasta$"), " \\", "\n", sep = ""),
     paste("-d ", drop_seqPath, " \\", "\n", sep = ""),
