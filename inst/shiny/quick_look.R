@@ -14,7 +14,7 @@ lookUI <- function(id) {
                                          
                                          selectizeInput(ns("look_filetype"), label="Select a file type",
                                                         choices = c("DGE files (*.dge.*)" = "dge_look",
-                                                                    "Combined file (*.txt*)" = "combined_look"
+                                                                    "Combined files (*.txt*)" = "combined_look"
                                                         ),
                                                         selected = c("DGE files (*.dge.*)"), multiple = FALSE),
                                          
@@ -28,10 +28,15 @@ lookUI <- function(id) {
                                          ),
                                          
                                          conditionalPanel(condition  = "input.look_filetype == 'combined_look'",
-                                                          tags$b("Select a combined file:"),
+                                                          tags$b("Select a cell fraction file:"),
                                                           tags$p(),
                                                           verbatimTextOutput(ns("combined_files_look"), placeholder = TRUE),
-                                                          shinyFilesButton(ns("file_combined_look"), "Select a combined file", "Please select a file", multiple = FALSE),
+                                                          shinyFilesButton(ns("file_combined_look"), "Select a cell fraction file", "Please select a file", multiple = FALSE),
+                                                          tags$p(),
+                                                          tags$b("Select an average transcripts file:"),
+                                                          tags$p(),
+                                                          verbatimTextOutput(ns("avg_files_look"), placeholder = TRUE),
+                                                          shinyFilesButton(ns("file_avg_look"), "Select an average transcripts file", "Please select a file", multiple = FALSE),
                                                           tags$p(),
                                                           ns = NS(id)
                                          ),
@@ -61,12 +66,12 @@ lookUI <- function(id) {
                                        ),
 
                                        box(
-                                         title = "Gene plots",  width = 12, status = "primary", collapsible = T,
+                                         title = "Percentage of cells expressing selected genes",  width = 12, status = "primary", collapsible = T,
                                            uiOutput(ns("gene_plots_look"))
                                        ),
                                        
                                        box(
-                                         title = "Gene table",  width = 12, status = "info", collapsible = T,
+                                         title = "Average number of transcripts each gene expressed",  width = 12, status = "info", collapsible = T,
                                          uiOutput(ns("gene_table_look"))
                                        )
                                        
@@ -110,12 +115,16 @@ lookServer <- function(input, output, session, fileRoot = NULL) {
   
   shinyFileChoose(input, "file_samples_look", roots = volumes, session = session, filetypes=c('', 'txt', 'gz'))
   shinyFileChoose(input, "file_combined_look", roots = volumes, session = session, filetypes=c('', 'txt'))
+  shinyFileChoose(input, "file_avg_look", roots = volumes, session = session, filetypes=c('', 'txt'))
 
   output$samples_files_look <- renderPrint({
     as.character(parseFilePaths(volumes, input$file_samples_look)[4])
   })
   output$combined_files_look <- renderPrint({
     as.character(parseFilePaths(volumes, input$file_combined_look)[4])
+  })
+  output$avg_files_look <- renderPrint({
+    as.character(parseFilePaths(volumes, input$file_avg_look)[4])
   })
   
   # Upload data 
@@ -146,22 +155,31 @@ lookServer <- function(input, output, session, fileRoot = NULL) {
         lapply(sample_list, upload_dges)
         
         if(length(sample_list) > 1){
+          
           df_merge <<- df_merge[, -1]
+          df_merge_avg <<- df_merge_avg[, -1]
         }
-        df_merge[is.na(df_merge)] <- 0
         
-        write.table(df_merge, file.path(dirname(sample_list[1]), "combined.txt"), append = FALSE, sep = "\t", dec = ".",
+        df_merge[is.na(df_merge)] <- 0
+        df_merge_avg[is.na(df_merge_avg)] <- 0
+        
+        write.table(df_merge, file.path(dirname(sample_list[1]), "cell_frac.txt"), append = FALSE, sep = "\t", dec = ".",
+                    row.names = TRUE, col.names = TRUE)
+        write.table(df_merge_avg, file.path(dirname(sample_list[1]), "genes_avg.txt"), append = FALSE, sep = "\t", dec = ".",
                     row.names = TRUE, col.names = TRUE)
       }
       else{
         
         sample_list <<- isolate(as.character(parseFilePaths(volumes, input$file_combined_look)$datapath))
         df_merge <<- read.table(sample_list, header = T, row.names = 1, stringsAsFactors = F)
+        
+        sample_list_avg <- isolate(as.character(parseFilePaths(volumes, input$file_avg_look)$datapath))
+        df_merge_avg <<- read.table(sample_list_avg, header = T, row.names = 1, stringsAsFactors = F)
       }
       
       setProgress(value = 0.6)
 
-      output$look_gene_table <- renderDT(datatable(df_merge, rownames = TRUE, selection = "none"))
+      output$look_gene_table <- renderDT(datatable(df_merge_avg, rownames = TRUE, selection = "none"))
       
       setProgress(value = 1)
       shinyjs::hide("load_upload")
@@ -170,7 +188,7 @@ lookServer <- function(input, output, session, fileRoot = NULL) {
   })# Upload data END
   
 
-  # plots and table
+  # plots
   observeEvent(input$do_look, {
     
     withProgress(message = "Please wait ...",{
@@ -212,7 +230,7 @@ lookServer <- function(input, output, session, fileRoot = NULL) {
       shinyjs::hide("load_quick_look")
       shinyjs::show("check_quick_look")
     })
-  })# plots and table END
+  })# plots END
   
   
   output$figure_save_look <- renderUI({
@@ -246,24 +264,39 @@ lookServer <- function(input, output, session, fileRoot = NULL) {
 
 #########################   Gene fraction Start   ##########################################
 df_merge <<- data.frame(empty_name=character(), stringsAsFactors=FALSE)
+df_merge_avg <<- data.frame(empty_name=character(), stringsAsFactors=FALSE)
 
 upload_dges <- function(sample_file){
   
-  #Input separated dge files. Returns combined df.
+  # Input separated dge files. Returns combined df.
   sample_name <- sub(pattern = "(.*?)\\..*$", replacement = "\\1", basename(sample_file))
   
   df <- read.table(sample_file, header = T, row.names = 1, stringsAsFactors = F)
   
-  df_avg <- data.frame(lapply(rowMeans(df!=0), round, 2))
+  # Calculate percentage of cells expressing all genes
+  df_frac <- data.frame(lapply(rowMeans(df!=0), round, 2))
+  df_frac <- t(df_frac)
+  colnames(df_frac) <- sample_name
+  rownames(df_frac) <- rownames(df)
+  
+  if(length(sample_list) == 1){
+    df_merge <<- df_frac
+  }
+  else{
+    df_merge <<- transform(merge(df_merge, df_frac, by = 0, all = TRUE), row.names = Row.names, Row.names = NULL)
+  }
+  
+  # Calculate the average transcripts of each gene expressed
+  df_avg <- data.frame(lapply(rowMeans(df), round, 2))
   df_avg <- t(df_avg)
   colnames(df_avg) <- paste0(sample_name, "_avg")
   rownames(df_avg) <- rownames(df)
   
   if(length(sample_list) == 1){
-    df_merge <<- df_avg
+    df_merge_avg <<- df_avg
   }
   else{
-    df_merge <<- transform(merge(df_merge, df_avg, by = 0, all = TRUE), row.names = Row.names, Row.names = NULL)
+    df_merge_avg <<- transform(merge(df_merge_avg, df_avg, by = 0, all = TRUE), row.names = Row.names, Row.names = NULL)
   }
 }
 
@@ -278,10 +311,10 @@ gene_frac_plot <- function(sample_name){
   
   df$gene_list <-factor(df$gene_list, levels = genes_look)
   
-  p <- ggplot(data = df, aes(x = gene_list, y = gene_frac)) + #scale_x_discrete(limits = genes_look) +
+  p <- ggplot(data = df, aes(x = gene_list, y = gene_frac)) + # scale_x_discrete(limits = genes_look) +
        geom_bar(stat = "identity", fill = "steelblue", width = width_bar) + coord_flip() + theme_minimal() +
        geom_text(aes(label = gene_frac), vjust = -0.5, angle = -90, size = 3.5) +
-       labs(title = sub("_avg$", "", sample_name)) + theme_bw() + 
+       labs(title = sample_name) + theme_bw() + # labs(title = sub("_avg$", "", sample_name))
        theme(axis.title.x = element_blank(), axis.title.y = element_blank(), 
              panel.grid = element_blank(), plot.title = element_text(hjust = 0.5),
              axis.text = element_text(size = 10)) +
