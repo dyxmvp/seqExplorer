@@ -16,6 +16,7 @@ source("intro.R")
 source("fastqc.R")
 source("dge.R")
 source("species_mix.R")
+source("quick_look.R")
 source("seurat_normal.R")
 source("seurat_integrated.R")
 
@@ -29,6 +30,7 @@ ui <- tagList(
         menuItem("FastQC", tabName = "fastqc_tab", icon = icon("info-circle")),
         menuItem("Generate DGE", tabName = "dge_tab", icon = icon("th")),
         menuItem("Species mix", tabName = "mix_tab", icon = icon("bar-chart")),
+        menuItem("Quick look", tabName = "look_tab", icon = icon("search")),
         menuItem("Seurat", tabName = "seurat_tab", icon = icon("bar-chart"),
                  menuSubItem('Normal workflow', tabName = 'seurat_normal_tab', icon = icon('th')),
                  menuSubItem('Integrated analyses', tabName = 'seurat_integrated_tab', icon = icon('th')))
@@ -43,6 +45,7 @@ ui <- tagList(
         fastqcUI("QC"),
         dgeUI("DGE"),
         mixUI("MIX"),
+        lookUI("LOOK"),
         seurat_normal_UI("seuratNormal"),
         seurat_integrated_UI("seuratIntegrated")
       )
@@ -82,6 +85,8 @@ server <- function(input, output, session) {
   df_dge <- callModule(dgeServer, "DGE")
 
   df_mix <- callModule(mixServer, "MIX")
+  
+  df_look <- callModule(lookServer, "LOOK")
 
   df_seurat_normal <- callModule(seurat_normal_Server, "seuratNormal")
 
