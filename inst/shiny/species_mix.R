@@ -77,6 +77,12 @@ mixUI <- function(id) {
                                       tags$p(),
                                       verbatimTextOutput(ns("file_dge_merged"), placeholder = TRUE),
                                       shinyFilesButton(ns("dge_merged"), "Select a dge file", "Please select a dge file", multiple = FALSE),
+                                      tags$p(),
+                                      radioButtons(ns("NA_name"), label = "Replace NA with",
+                                                   choices = list("Human sample name" = "1", 
+                                                                  "Mouse sample name" = "2"), 
+                                                   selected = "1"),
+                                      checkboxInput(ns("dge_only"), "Generate dge files only? (No cell barcodes file)", FALSE),
                                       ns = NS(id)
                      )
                    ),
@@ -247,6 +253,15 @@ mixServer <- function(input, output, session, fileRoot = NULL) {
       samplename_human <<- isolate(as.character(input$name_human))
       samplename_mouse <<- isolate(as.character(input$name_mouse))
       
+      choose_NA_name <- isolate(as.character(input$NA_name))
+      
+      if(choose_NA_name == "1"){
+        samplename_NA <<- samplename_human
+      }
+      else{
+        samplename_NA <<- samplename_mouse
+      }
+      
       selectedBCPath_mix <<- isolate(as.character(parseFilePaths(volumes, input$file_cell_bc_mix)[4]))
       
       bamPath_mix <<- isolate(as.character(parseFilePaths(volumes, input$file_mix_bam)[4]))
@@ -296,7 +311,9 @@ mixServer <- function(input, output, session, fileRoot = NULL) {
         
         if(input$mix_filetype == "1_dge_mix"){
           merged_dge_to_2dge()
-          two_dge_to_sum()
+          if(input$dge_only == FALSE){
+            two_dge_to_sum()
+          }
         }
         
         output$pmix1 <- renderUI({

@@ -113,38 +113,47 @@ merged_dge_to_2dge <- function(){
   # load human reference
   hg_ref <- read.table("useful/GSM1629193_hg19_ERCC.refFlat")
   hg <- data.frame(hg_ref$V1)
-
+  
   # load mouse reference
   mm_ref <- read.table("useful/mm10.refFlat")
   mm <- data.frame(mm_ref$V1)
-
+  
   # add a empty column for organism
   d1 <- read.table(dge_mergedPath, header=T, stringsAsFactors=F)
   d1$Organism <- NA
-
+  
   # search and label human
   idx_h <- which(d1$GENE %in% hg$hg_ref.V1)
   len_h <- length(idx_h)
   d1[idx_h,]$Organism <- samplename_human
-
+  
   # search and label mouse
   idx_m <- which(d1$GENE %in% mm$mm_ref.V1)
   len_m <- length(idx_m)
   d1[idx_m,]$Organism <- samplename_mouse
-
+  
+  # replace NA with sample name
+  d1$Organism <- as.character(d1$Organism)
+  d1$Organism[is.na(d1$Organism)] <- samplename_NA
+  
   # check the label
   #len_sum <- len_m + len_h
   #num_NA <- sum(is.na(d1$Organism))
-
+  
   # generate separeted dge files by organism
   human_dge <- subset(d1, Organism == samplename_human, select = -c(Organism))
   mouse_dge <- subset(d1, Organism == samplename_mouse, select = -c(Organism))
-
-  dge_humanPath <<- file.path(dirname(dge_mergedPath), paste0(samplename_human, ".dge.txt.gz"))
-  dge_mousePath <<- file.path(dirname(dge_mergedPath), paste0(samplename_mouse, ".dge.txt.gz"))
-
+  
+  samplename_o <- sub(pattern = "(.*?)\\..*$", replacement = "\\1", basename(dge_mergedPath))
+  
+  dge_humanPath <<- file.path(dirname(dge_mergedPath), paste0(samplename_o, "_", samplename_human, ".dge.txt"))
+  dge_mousePath <<- file.path(dirname(dge_mergedPath), paste0(samplename_o, "_", samplename_mouse, ".dge.txt"))
+  
   write.table(human_dge, dge_humanPath, sep="\t", row.names = FALSE)
   write.table(mouse_dge, dge_mousePath, sep="\t", row.names = FALSE)
+  
+  R.utils::gzip(dge_humanPath)
+  R.utils::gzip(dge_mousePath)
 
 }
 # Plot with one merged dge files END
