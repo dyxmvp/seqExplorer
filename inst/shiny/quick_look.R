@@ -9,8 +9,31 @@ lookUI <- function(id) {
           navbarPage(title = NULL,
                      tabPanel("Data preprocessing",
                               fluidRow(
-                                       box(
-                                         title = "Step 1: Select samples", width = 6, solidHeader = TRUE, status = "warning", collapsible = T,
+                                box(
+                                  title = "Optional: Filter cells based on genes", width = 3, solidHeader = TRUE, status = "danger", collapsible = T,
+                                  
+                                  textInput(ns("genes_filter"), "Type gene list (use ',' to separate): "),
+                                  
+                                  tags$b("Select dge files:"),
+                                  tags$p(),
+                                  verbatimTextOutput(ns("samples_files_filter"), placeholder = TRUE),
+                                  shinyFilesButton(ns("file_samples_filter"), "Select dge files", "Please select files", multiple = TRUE),
+                                  tags$p(),
+                                  
+                                  radioButtons(ns("keep_del"), label = "Keep or delete selected cells?",
+                                               choices = list("Keep" = "1", 
+                                                              "Delete" = "2"), 
+                                               selected = "1"),
+
+                                  withBusyIndicatorUI(icon_name = "filter",
+                                                      actionButton(ns("do_filter"),
+                                                                   "Filter",
+                                                                   style = "width: 70%")
+                                  )
+                                ),       
+                                
+                                box(
+                                         title = "Step 1: Select samples", width = 4, solidHeader = TRUE, status = "warning", collapsible = T,
                                          
                                          selectizeInput(ns("look_filetype"), label="Select a file type",
                                                         choices = c("DGE files (*.dge.*)" = "dge_look",
@@ -49,9 +72,9 @@ lookUI <- function(id) {
                                        ),
                                        
                                        box(
-                                         title = "Step 2: Input gene list", width = 6, solidHeader = TRUE, status = "success", collapsible = T,
+                                         title = "Step 2: Input gene list", width = 5, solidHeader = TRUE, status = "success", collapsible = T,
                                          
-                                         textInput(ns("gene_list"), "Typle gene list (use ',' to separate): "),
+                                         textInput(ns("gene_list"), "Type gene list (use ',' to separate): "),
                                          
                                          numericInput(ns("p_ncols"), label="Number of columns in the plot",
                                                       min = 1, max = Inf, value = 5),
@@ -113,10 +136,14 @@ lookServer <- function(input, output, session, fileRoot = NULL) {
   
   volumes <- (c(Home = fs::path_home(), getVolumes()()))
   
+  shinyFileChoose(input, "file_samples_filter", roots = volumes, session = session, filetypes=c('', 'txt', 'gz'))
   shinyFileChoose(input, "file_samples_look", roots = volumes, session = session, filetypes=c('', 'txt', 'gz'))
   shinyFileChoose(input, "file_combined_look", roots = volumes, session = session, filetypes=c('', 'txt'))
   shinyFileChoose(input, "file_avg_look", roots = volumes, session = session, filetypes=c('', 'txt'))
 
+  output$samples_files_filter <- renderPrint({
+    as.character(parseFilePaths(volumes, input$file_samples_filter)[4])
+  })
   output$samples_files_look <- renderPrint({
     as.character(parseFilePaths(volumes, input$file_samples_look)[4])
   })
@@ -126,6 +153,30 @@ lookServer <- function(input, output, session, fileRoot = NULL) {
   output$avg_files_look <- renderPrint({
     as.character(parseFilePaths(volumes, input$file_avg_look)[4])
   })
+  
+  
+  # Filter cells 
+  observeEvent(input$do_filter, {
+    
+    withProgress(message = "Please wait ...",{
+      
+      shinyjs::show("load_filter")
+
+      setProgress(value = 0.35)
+      
+      keep_filter <<- isolate(as.character(input$keep_del))
+
+      sample_list_filter <<- isolate(as.character(parseFilePaths(volumes, input$file_samples_filter)$datapath))
+      gene_list_filter <<- input$genes_filter
+      gene_list_filter <<- unlist(strsplit(gene_list_filter, split = ",|, "))
+      
+      lapply(sample_list_filter, upload_dges_filter)
+      
+      setProgress(value = 1)
+      shinyjs::hide("load_filter")
+      shinyjs::show("check_filter")
+    })
+  })# Filter cells END
   
   # Upload data 
   observeEvent(input$do_upload, {
@@ -265,6 +316,42 @@ lookServer <- function(input, output, session, fileRoot = NULL) {
 #########################   Gene fraction Start   ##########################################
 df_merge <<- data.frame(empty_name=character(), stringsAsFactors=FALSE)
 df_merge_avg <<- data.frame(empty_name=character(), stringsAsFactors=FALSE)
+
+
+upload_dges_filter <- function(sample_file){
+  
+  sample_name <- sub(pattern = "(.*?)\\..*$", replacement = "\\1", basename(sample_file))
+  
+  df <- read.table(sample_file, header = T, row.names = 1, stringsAsFactors = F)
+  
+  for (g in gene_list_filter){
+    
+    acols <- (df[which(row.names(df) == g),] > 0)
+    bcols <- !acols
+    
+    a <- as.data.frame(df[,acols])
+    colnames(a) <- colnames(df)[acols]
+    b <- as.data.frame(df[,bcols])
+    colnames(b) <- colnames(df)[bcols]
+  }
+  
+  output_dir <- file.path(dirname(sample_list_filter[1]), "dges_filtered")
+  dir.create(output_dir)
+  output_file <- file.path(output_dir, paste0(sample_name, "_filtered", ".dge.txt"))
+    
+  if(keep_filter == 1){
+    
+    write.table(a, output_file, append = FALSE, sep = "\t", dec = ".",
+                row.names = TRUE, col.names = TRUE)
+  }
+  else{
+    
+    write.table(b, output_file, append = FALSE, sep = "\t", dec = ".",
+                row.names = TRUE, col.names = TRUE)
+  }
+  
+  R.utils::gzip(output_file)
+}
 
 upload_dges <- function(sample_file){
   
