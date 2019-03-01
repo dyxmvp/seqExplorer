@@ -333,23 +333,24 @@ upload_dges_filter <- function(sample_file){
     colnames(a) <- colnames(df)[acols]
     b <- as.data.frame(df[,bcols])
     colnames(b) <- colnames(df)[bcols]
+    
+    if(keep_filter == 1){
+      df <- a
+    }
+    else{
+      df <- b
+    }
+    
+    
   }
   
   output_dir <- file.path(dirname(sample_list_filter[1]), "dges_filtered")
   dir.create(output_dir)
   output_file <- file.path(output_dir, paste0(sample_name, "_filtered", ".dge.txt"))
     
-  if(keep_filter == 1){
-    
-    write.table(a, output_file, append = FALSE, sep = "\t", dec = ".",
-                row.names = TRUE, col.names = TRUE)
-  }
-  else{
-    
-    write.table(b, output_file, append = FALSE, sep = "\t", dec = ".",
-                row.names = TRUE, col.names = TRUE)
-  }
-  
+  write.table(df, output_file, append = FALSE, sep = "\t", dec = ".", 
+              row.names = TRUE, col.names = TRUE)
+
   R.utils::gzip(output_file)
 }
 
