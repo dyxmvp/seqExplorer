@@ -498,7 +498,7 @@ generate_sh_new <- function(){
         paste("#SBATCH --mail-type=", mailType, "\n", sep=""),
         paste("#SBATCH --mail-user=", email, "\n", sep=""),
         paste("#SBATCH -o $s.%%j.out\n", sep=""),
-        paste("#SBATCH -e $s.%%j.err, "\n\n\n\n", sep=""),
+        paste("#SBATCH -e $s.%%j.err", "\n\n\n\n", sep=""),
         sep = "", file = file.path(scriptPath, paste(filename, ".sh", sep = "")))
   }
   
