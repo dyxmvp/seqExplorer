@@ -66,7 +66,7 @@ seurat_integrated_UI <- function(id) {
 
                        ),
 
-                       box(title = "3. Cell selection", width = 2, height = 400, solidHeader = TRUE, status = "danger",
+                       box(title = "3. Cell QC", width = 2, height = 400, solidHeader = TRUE, status = "danger",
                            collapsible = T,
 
                            selectizeInput(ns("subsetNames_integrated"), label="Filter Names",
@@ -79,7 +79,7 @@ seurat_integrated_UI <- function(id) {
                        ),
 
                        box(
-                         title = "4. Normalize and scale data", width = 3, height = 400, solidHeader = TRUE, status = "success",
+                         title = "4. Normalize data", width = 3, height = 400, solidHeader = TRUE, status = "success",
                          selectizeInput(ns("norm_methods_integrated"), label="Normalization method",
                                         choices = c("LogNormalize"),
                                         selected = c("LogNormalize"),
@@ -101,7 +101,7 @@ seurat_integrated_UI <- function(id) {
 
                      fluidRow(
                        box(
-                         title = "3.1 VlnPlot (Cell selection)",  width = 8, height = 600, status = "danger",
+                         title = "3.1 VlnPlot (Cell QC)",  width = 8, height = 600, status = "danger",
 
                          sidebarPanel(
                            tableOutput(ns("nGene_range_integrated")),
@@ -109,8 +109,6 @@ seurat_integrated_UI <- function(id) {
                            hr(),
                            tableOutput(ns("mito_range_integrated")),
                            uiOutput(ns("mito_low_high_integrated"))
-                           #uiOutput(ns("nGene_range")),
-                           #uiOutput(ns("mito_range"))
                          ),
                          mainPanel(
                            uiOutput(ns("filter_plots_integrated"))
@@ -118,131 +116,28 @@ seurat_integrated_UI <- function(id) {
 
                        ),
                        box(
-                         title = "3.2 GenePlot (Cell selection)",  width = 4, height = 600, status = "danger",
+                         title = "3.2 GenePlot (Cell QC)",  width = 4, height = 600, status = "danger",
                          uiOutput(ns("gene_plots_integrated"))
                        )
                      )
             ), # Tab 1 END
 
-            tabPanel('2. Canonical correlation analysis (CCA)',
-                     fluidRow(
-
-                       box(title = "CCA", width = 3, height = 600, solidHeader = TRUE, status = "warning",
-                           collapsible = T,
-
-
-                           selectizeInput(ns("mean_fun_integrated"), label="Mean function",
-                                          choices = c("ExpMean"),
-                                          selected = c("ExpMean"),
-                                          multiple = FALSE),
-
-                           selectizeInput(ns("disper_fun_integrated"), label="Dispersion function",
-                                          choices = c("LogVMR"),
-                                          selected = c("LogVMR"),
-                                          multiple = FALSE),
-
-                           splitLayout(
-
-                           numericInput(ns("x_low_integrated"),
-                                        label="X low_cutoff", min = 0, max = Inf, value = 0.1, step = 0.0001),
-                           numericInput(ns("x_high_integrated"),
-                                        label="X high_cutoff", min = 0, max = Inf, value = 8, step = 0.1)
-                           ),
-
-                           splitLayout(
-                           numericInput(ns("y_cut_integrated"),
-                                        label="Y cutoff", min = 0, max = Inf, value = 1, step = 0.1),
-
-                           numericInput(ns("union_genes_integrated"),
-                                        label="Take union of (?) genes", min = 0, max = Inf, value = 1000)
-                           ),
-
-                           splitLayout(
-                             numericInput(ns("cca_dim1_print"),
-                                          label="Print from CC: ", min = 1, max = Inf, value = 1),
-                             numericInput(ns("cca_dim2_print"),
-                                          label="to CC: ", min = 1, max = Inf, value = 2)
-                           ),
-
-                           splitLayout(
-                             numericInput(ns("cca_genes_print"),
-                                          label="Number of genes to print", min = 1, max = Inf, value = 10),
-                             numericInput(ns("cc_num"),
-                                          label="Number of cc to calculate", min = 1, max = Inf, value = 30)
-                           ),
-
-
-                           withBusyIndicatorUI(icon_name = "cca_integrated",
-                                               actionButton(ns("find_cca_integrated"),
-                                                            "CCA",
-                                                            style = "width: 80%")
-                           )
-                       ),
-                       box(
-                         title = "CCs",  width = 4, height = 600, status = "success",
-                         uiOutput(ns("cca_table_integrated"))
-                       ),
-                       box(
-                         title = "CCA plots",  width = 5, height = 600, status = "primary",
-                         uiOutput(ns("cca_plots_integrated"))
-                       )
-                     )
-            ), # Tab 2 END
-
-            tabPanel('3. Choose CCs',
+            tabPanel('2. Perform integration',
                      fluidRow(
                        column(width = 5,
-                              box(title = "Choose CCs", width = NULL, solidHeader = TRUE, status = "warning",
-                                  collapsible = T,
-
-                                  numericInput(ns("dims_eval"),
-                                               label="Dimensions to evalutate: ", min = 1, max = Inf, value = 30),
-
-                                  splitLayout(
-                                    numericInput(ns("ccs_dims_heatmap"),
-                                                 label="Dimensions to show in Heatmap:", min = 1, max = Inf, value = 9),
-                                    numericInput(ns("ccs_cells_heatmap"),
-                                                 label="Cells to use in heatmap:", min = 1, max = Inf, value = 500)
-                                  ),
-
-                                  withBusyIndicatorUI(icon_name = "ccs",
-                                                      actionButton(ns("viz_ccs"),
-                                                                   "CCs Plots",
-                                                                   style = "width: 90%")
-                                  )),
-
-                              box(title = "CCs plot", width = NULL, height = 580, status = "success",
-                                  uiOutput(ns("ccs_plot"))
-                              )
-                       ), #
-
-                       column(width = 7,
-                              box(
-                                title = "CCs Heatmap",  width = NULL, height = 850, status = "primary",
-                                uiOutput(ns("ccs_heatmap"))
-                              )
-                       )#
-                     )
-            ), # Tab 3 END
-
-            tabPanel('4. Align CCA subspaces',
-                     fluidRow(
-                       column(width = 5,
-                              box(title = "Align CCA", width = NULL, solidHeader = TRUE, status = "warning",
+                              box(title = "Perform integration", width = NULL, solidHeader = TRUE, status = "warning",
                                   collapsible = T,
 
                                   splitLayout(
                                     numericInput(ns("align_dims"),
                                                  label="Dimensions to align: ", min = 1, max = Inf, value = 20),
                                     numericInput(ns("ccs_res"),
-                                                 label="Resolution (TSNE): ", min = 0, max = Inf, value = 0.6, step = 0.01),
-                                    numericInput(ns("ccs_perp"),
-                                                 label="Perplexity (TSNE): ", min = 1, max = Inf, value = 30)
+                                                 label="Resolution (TSNE): ", min = 0, max = Inf, value = 0.5, step = 0.01)
                                   ),
 
                                   withBusyIndicatorUI(icon_name = "cca_align",
                                                       actionButton(ns("viz_cca_align"),
-                                                                   "Align CCA",
+                                                                   "Perform integration",
                                                                    style = "width: 90%")
                                   ),
                                   br(),
@@ -254,26 +149,27 @@ seurat_integrated_UI <- function(id) {
                                                                    "Assign new names",
                                                                    style = "width: 90%")
                                   )
-                                  ),
-
-                              box(title = "Aligned CCA plot", width = NULL, height = 500, status = "success",
-
-                                  uiOutput(ns("align_cca_plot"))
-
                                   )
 
                        ), #
 
                        column(width = 7,
                               box(
-                                title = "TSNE Plot",  width = NULL, height = 850, status = "primary",
-                                uiOutput(ns("ccs_tsne_plot"))
+                                title = "Plots",  width = NULL, height = 850, status = "primary",
+                                tabsetPanel(type = "tabs",
+                                            tabPanel("UMAP",
+                                                     br(),
+                                                     uiOutput(ns("ccs_tsne_plot"))),
+                                            tabPanel("UMAP_side_by_side",
+                                                     br(),
+                                                     uiOutput(ns("ccs_side_plot")))
+                                )
                               )
                        )#
                      )
-            ), # Tab 4 END
+            ), # Tab 2 END
 
-            tabPanel('5. Identify conserved cell type markers',
+            tabPanel('3. Identify conserved cell type markers',
 
                      fluidRow(
 
@@ -349,9 +245,9 @@ seurat_integrated_UI <- function(id) {
                              )
 
                      )#
-            ), # Tab 5 END
+            ), # Tab 3 END
 
-            tabPanel('6. Differential genes across conditions',
+            tabPanel('4. Differential genes across conditions',
                      fluidRow(
                        column(width = 5,
                               box(title = "Differential genes", width = NULL, solidHeader = TRUE, status = "warning",
@@ -375,12 +271,19 @@ seurat_integrated_UI <- function(id) {
 
                        column(width = 7,
                               box(
-                                title = "Differential genes heatmap",  width = NULL, height = 850, status = "primary",
-                                uiOutput(ns("ccs_heatmap_diff"))
+                                title = "Differential genes heatmap",  width = NULL, status = "primary",
+                                tabsetPanel(type = "tabs",
+                                            tabPanel("FeaturePlots",
+                                                     br(),
+                                                     uiOutput(ns("ccs_heatmap_diff"))),
+                                            tabPanel("VlnPlot",
+                                                     br(),
+                                                     uiOutput(ns("ccs_vlnplot_diff")))
+                                )
                               )
                        )#
                      )
-            ), # Tab 6 END
+            ), # Tab 4 END
             
             tabPanel('* Save and load Seurat object',
                      fluidRow(
@@ -420,7 +323,7 @@ seurat_integrated_UI <- function(id) {
                        )
                        
                      )#
-            ), # Tab 7 END
+            ), # Tab 5 END
             
             tabPanel('* Save figures',
                      fluidRow(
@@ -429,10 +332,9 @@ seurat_integrated_UI <- function(id) {
                          title = "Save figure", width = 3, solidHeader = TRUE, status = "primary",
                          
                          selectizeInput(ns("psave_select_integrated"), label="Choose a figure to save",
-                                        choices = c("QC", "GenePlot", "CCA_plot", "MetageneBicorPlot", "DimHeatmap",
-                                                    "CCA_aligned", "TSNEPlot", "VlnPlot_markers", "FeaturePlot", 
-                                                    "RidgePlot", "Features_conserved", "SplitDotPlotGG", 
-                                                    "Scatter_plot", "FeatureHeatmap"),
+                                        choices = c("QC", "GenePlot", "CCA_plot", "CCA_side", "VlnPlot_markers", 
+                                                    "FeaturePlot", "RidgePlot", "Features_conserved", "SplitDotPlotGG", 
+                                                    "Scatter_plot", "FeatureHeatmap", "VlnPlot_side"),
                                         selected = c("QC"),
                                         multiple=FALSE
                          ),
@@ -452,7 +354,7 @@ seurat_integrated_UI <- function(id) {
                        )
                        
                      )#
-            )# Tab 8 END
+            )# Tab 6 END
           )
   )
 
@@ -529,36 +431,34 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
       setProgress(value = 0.5)
 
       # Set up control object
-      ctrl <<- CreateSeuratObject(raw.data = ctrl.data, min.cells = input$min_cells_integrated,
-                                  min.genes = input$min_genes_integrated,
+      ctrl <<- CreateSeuratObject(counts = ctrl.data, min.cells = input$min_cells_integrated,
+                                  min.features = input$min_genes_integrated,
                                   project = input$project_name_ctrl)
-      ctrl@meta.data$stim <- "CTRL"
+      ctrl$stim <- "CTRL"
       ctrl <<- ctrl
 
-      mito.genes.ctrl <- grep(pattern = "^MT-", x = rownames(x = ctrl@data), value = TRUE, ignore.case = TRUE)
-      percent.mito.ctrl <- Matrix::colSums(ctrl@raw.data[mito.genes.ctrl, ])/Matrix::colSums(ctrl@raw.data)
-      ctrl <<- AddMetaData(object = ctrl, metadata = percent.mito.ctrl, col.name = "percent.mito.ctrl")
+      ctrl[["percent.mito"]] <- PercentageFeatureSet(object = ctrl, pattern = "(?i)^MT-") #(?i) for case insensitive
+      ctrl <<- ctrl
+      
 
       # Set up stimulated object
-      stim <<- CreateSeuratObject(raw.data = stim.data, min.cells = input$min_cells_integrated,
-                                  min.genes = input$min_genes_integrated,
+      stim <<- CreateSeuratObject(counts = stim.data, min.cells = input$min_cells_integrated,
+                                  min.features = input$min_genes_integrated,
                                   project = input$project_name_stim)
-      stim@meta.data$stim <- "STIM"
+      stim$stim <- "STIM"
       stim <<- stim
-
-      mito.genes.stim <- grep(pattern = "^MT-", x = rownames(x = stim@data), value = TRUE, ignore.case = TRUE)
-      percent.mito.stim <- Matrix::colSums(stim@raw.data[mito.genes.stim, ])/Matrix::colSums(stim@raw.data)
-      stim <<- AddMetaData(object = stim, metadata = percent.mito.stim, col.name = "percent.mito.stim")
+      
+      stim[["percent.mito"]] <- PercentageFeatureSet(object = stim, pattern = "(?i)^MT-") #(?i) for case insensitive
+      stim <<- stim
 
       setProgress(value = 0.7)
 
       # Set up combined object
-      pbmc.combined <<- MergeSeurat(object1 = ctrl, object2 = stim, add.cell.id1 = "ctrl",
-                                    add.cell.id2 = "stim", project = "Integrated_analysis")
-
-      mito.genes <- grep(pattern = "^MT-", x = rownames(x = pbmc.combined@data), value = TRUE, ignore.case = TRUE)
-      percent.mito <- Matrix::colSums(pbmc.combined@raw.data[mito.genes, ])/Matrix::colSums(pbmc.combined@raw.data)
-      pbmc.combined <<- AddMetaData(object = pbmc.combined, metadata = percent.mito, col.name = "percent.mito")
+      pbmc.combined <<- merge(x = ctrl, y = stim, merge.data = FALSE,
+                             add.cell.ids = c("ctrl", "stim"), project = "Integrated_analysis")
+      
+      pbmc.combined[["percent.mito"]] <- PercentageFeatureSet(object = pbmc.combined, pattern = "(?i)^MT-") #(?i) for case insensitive
+      pbmc.combined <<- pbmc.combined
 
       setProgress(value = 1)
 
@@ -570,7 +470,7 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
 
   )# Object initialization END
 
-  #Cell selection
+  #Cell QC
   observeEvent(input$cell_filter_integrated, {
 
     shinyjs::show("load_cfilter_integrated")
@@ -592,65 +492,67 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
     }
     )
 
-    min_gene_ctrl <- min(ctrl@meta.data$nGene)
-    max_gene_ctrl <- max(ctrl@meta.data$nGene)
+    min_gene_ctrl <- min(ctrl@meta.data$nFeature_RNA)
+    max_gene_ctrl <- max(ctrl@meta.data$nFeature_RNA)
 
-    min_gene_stim <- min(stim@meta.data$nGene)
-    max_gene_stim <- max(stim@meta.data$nGene)
+    min_gene_stim <- min(stim@meta.data$nFeature_RNA)
+    max_gene_stim <- max(stim@meta.data$nFeature_RNA)
 
-    min_mito_ctrl <- round(min(ctrl@meta.data$percent.mito.ctrl), 2)
-    max_mito_ctrl <- round(max(ctrl@meta.data$percent.mito.ctrl), 2)
+    min_mito_ctrl <- round(min(ctrl@meta.data$percent.mito), 2)
+    max_mito_ctrl <- round(max(ctrl@meta.data$percent.mito), 2)
 
-    min_mito_stim <- round(min(stim@meta.data$percent.mito.stim), 2)
-    max_mito_stim <- round(max(stim@meta.data$percent.mito.stim), 2)
+    min_mito_stim <- round(min(stim@meta.data$percent.mito), 2)
+    max_mito_stim <- round(max(stim@meta.data$percent.mito), 2)
 
     output$nGenePlot_integrated <- renderPlot({
 
       if("nGene" %in% input$subsetNames_integrated){
 
-        VlnPlot(object = pbmc.combined, features.plot = c("nGene"), nCol = 1) +
+        VlnPlot(object = pbmc.combined, features = c("nFeature_RNA"), nCol = 1) +
           geom_hline(yintercept = input$gene_low_integrated, color = 'darkgreen', linetype = "dashed", size = 1.5) +
-          geom_text(data = data.frame(x=1.2,y=input$gene_low_integrated), aes(x, y), label="low", vjust=1.5, hjust=0,color = "darkgreen",size = 5,fontface = "bold") +
+          #geom_text(data = data.frame(x=1.2,y=input$gene_low_integrated), aes(x, y), label="low", vjust=1.5, hjust=0,color = "darkgreen",size = 5,fontface = "bold") +
           geom_hline(yintercept = input$gene_high_integrated, color = 'blue', linetype = "dashed", size = 1.5) +
-          geom_text(data = data.frame(x=1.2,y=input$gene_high_integrated), aes(x, y), label="high", vjust=-1, hjust=0,color = "blue",size = 5,fontface = "bold") +
-          scale_y_continuous(limits=c(0, 1.1*max_gene_ctrl))
+          #geom_text(data = data.frame(x=1.2,y=input$gene_high_integrated), aes(x, y), label="high", vjust=-1, hjust=0,color = "blue",size = 5,fontface = "bold") +
+          scale_y_continuous(limits=c(0, 1.1*max_gene_ctrl)) + NoLegend()
       }
       else{
-        VlnPlot(object = pbmc.combined, features.plot = c("nGene"), nCol = 1)
+        VlnPlot(object = pbmc.combined, features = c("nFeature_RNA"), nCol = 1) + NoLegend()
       }
     })
     output$nUMIPlot_integrated <- renderPlot({
-      VlnPlot(object = pbmc.combined, features.plot = c("nUMI"), nCol = 1)
+      VlnPlot(object = pbmc.combined, features = c("nCount_RNA"), nCol = 1) + NoLegend()
 
     })
     output$mitoPlot_integrated <- renderPlot({
 
       if("percent.mito" %in% input$subsetNames_integrated){
 
-        VlnPlot(object = pbmc.combined, features.plot = c("percent.mito"), nCol = 1) +
+        VlnPlot(object = pbmc.combined, features = c("percent.mito"), nCol = 1) +
           geom_hline(yintercept = input$mito_low_integrated, color = 'darkgreen', linetype = "dashed", size = 1.5) +
-          geom_text(data = data.frame(x=1.2,y=input$mito_low_integrated), aes(x, y), label="low", vjust=1.5, hjust=0,color = "darkgreen",size = 5,fontface = "bold") +
+          #geom_text(data = data.frame(x=1.2,y=input$mito_low_integrated), aes(x, y), label="low", vjust=1.5, hjust=0,color = "darkgreen",size = 5,fontface = "bold") +
           geom_hline(yintercept = input$mito_high_integrated, color = 'blue', linetype = "dashed", size = 1.5) +
-          geom_text(data = data.frame(x=1.2,y=input$mito_high_integrated), aes(x, y), label="high", vjust=-1, hjust=0,color = "blue",size = 5,fontface = "bold") +
-          scale_y_continuous(limits=c(min_mito_ctrl-0.01, max_mito_ctrl+0.01))
+          #geom_text(data = data.frame(x=1.2,y=input$mito_high_integrated), aes(x, y), label="high", vjust=-1, hjust=0,color = "blue",size = 5,fontface = "bold") +
+          scale_y_continuous(limits=c(min_mito_ctrl-0.01, max_mito_ctrl+0.01)) + NoLegend()
       }
       else{
-        VlnPlot(object = pbmc.combined, features.plot = c("percent.mito"), nCol = 1)
+        VlnPlot(object = pbmc.combined, features = c("percent.mito"), nCol = 1) + NoLegend()
       }
     })
     
-    p1_integrated <<- VlnPlot(object = pbmc.combined, features.plot = c("nGene", "nUMI", "percent.mito"), nCol = 3)
+    p1_integrated <<- VlnPlot(object = pbmc.combined, 
+                              features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), 
+                              ncol = 3) + NoLegend()
     
-    median_gene_ctrl <- median(ctrl@meta.data$nGene)
-    median_gene_stim <- median(stim@meta.data$nGene)
+    median_gene_ctrl <- median(ctrl@meta.data$nFeature_RNA)
+    median_gene_stim <- median(stim@meta.data$nFeature_RNA)
 
-    min_UMI_ctrl <- min(ctrl@meta.data$nUMI)
-    max_UMI_ctrl <- max(ctrl@meta.data$nUMI)
-    median_UMI_ctrl <- median(ctrl@meta.data$nUMI)
+    min_UMI_ctrl <- min(ctrl@meta.data$nCount_RNA)
+    max_UMI_ctrl <- max(ctrl@meta.data$nCount_RNA)
+    median_UMI_ctrl <- median(ctrl@meta.data$nCount_RNA)
 
-    min_UMI_stim <- min(stim@meta.data$nUMI)
-    max_UMI_stim <- max(stim@meta.data$nUMI)
-    median_UMI_stim <- median(stim@meta.data$nUMI)
+    min_UMI_stim <- min(stim@meta.data$nCount_RNA)
+    max_UMI_stim <- max(stim@meta.data$nCount_RNA)
+    median_UMI_stim <- median(stim@meta.data$nCount_RNA)
 
     nGene_summary <- data.frame(c(min_gene_ctrl, median_gene_ctrl, max_gene_ctrl),
                                 c(min_UMI_ctrl, median_UMI_ctrl, max_UMI_ctrl),
@@ -673,8 +575,8 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
     }
     )
 
-    median_mito_ctrl <- median(ctrl@meta.data$percent.mito.ctrl)
-    median_mito_stim <- median(stim@meta.data$percent.mito.stim)
+    median_mito_ctrl <- median(ctrl@meta.data$percent.mito)
+    median_mito_stim <- median(stim@meta.data$percent.mito)
     mito_summary <- data.frame(c(min_mito_ctrl, median_mito_ctrl, max_mito_ctrl),
                                c(min_mito_stim, median_mito_stim, max_mito_stim),
                                row.names = c("Min", "Median", "Max"))
@@ -698,12 +600,13 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
 
       if("percent.mito" %in% input$subsetNames_integrated){
 
-        GenePlot(object = pbmc.combined, gene1 = "nUMI", gene2 = "percent.mito")
-        abline(h = input$mito_low_integrated, col="darkgreen", lwd=2, lty="dashed")
-        abline(h = input$mito_high_integrated, col="blue", lwd=2, lty="dashed")
+        FeatureScatter(object = pbmc.combined, feature1 = "nCount_RNA", feature2 = "percent.mito") + 
+        geom_hline(yintercept = input$mito_low_integrated, color = 'darkgreen', linetype = "dashed", size = 1.5) +
+        geom_hline(yintercept = input$mito_high_integrated, color = 'blue', linetype = "dashed", size = 1.5) +
+        NoLegend()
       }
       else{
-        GenePlot(object = pbmc.combined, gene1 = "nUMI", gene2 = "percent.mito")
+        FeatureScatter(object = pbmc.combined, feature1 = "nCount_RNA", feature2 = "percent.mito") + NoLegend()
       }
     })
 
@@ -711,12 +614,13 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
 
       if("nGene" %in% input$subsetNames_integrated){
 
-        GenePlot(object = pbmc.combined, gene1 = "nUMI", gene2 = "nGene")
-        abline(h = input$gene_low_integrated, col="darkgreen", lwd=2, lty="dashed")
-        abline(h = input$gene_high_integrated, col="blue", lwd=2, lty="dashed")
+        FeatureScatter(object = pbmc.combined, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") +
+          geom_hline(yintercept = input$gene_low_integrated, color = 'darkgreen', linetype = "dashed", size = 1.5) +
+          geom_hline(yintercept = input$gene_high_integrated, color = 'blue', linetype = "dashed", size = 1.5) +
+          NoLegend()
       }
       else{
-        GenePlot(object = pbmc.combined, gene1 = "nUMI", gene2 = "nGene")
+        FeatureScatter(object = pbmc.combined, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") + NoLegend()
       }
     })
 
@@ -725,79 +629,57 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
 
   }
 
-  )# Cell selection END
+  )# Cell QC END
 
 
   # Normalization
   observeEvent(input$data_norm_integrated, {
 
-    withProgress(message = "Normalization and scaling...",{
+    withProgress(message = "Normalizing data...",{
 
       shinyjs::show("load_norm_integrated")
       setProgress(value = 0.35)
+      
+      gene_low_sel <<- isolate(as.numeric(input$gene_low_integrated))
+      gene_high_sel <<- isolate(as.numeric(input$gene_high_integrated))
+      mito_high_sel <<- isolate(as.numeric(input$mito_high_integrated))
 
       if("nGene" %in% input$subsetNames_integrated && "percent.mito" %in% input$subsetNames_integrated){
 
         #print("c1")
+        
+        ctrl <<- subset(x = ctrl, subset = nFeature_RNA > gene_low_sel & nFeature_RNA < gene_high_sel & 
+                          percent.mito < mito_high_sel)
+        
+        stim <<- subset(x = stim, subset = nFeature_RNA > gene_low_sel & nFeature_RNA < gene_high_sel & 
+                          percent.mito < mito_high_sel)
 
-         ctrl <<- FilterCells(object = ctrl, subset.names = c("nGene", "percent.mito.ctrl"),
-                              low.thresholds = c(input$gene_low_integrated, input$mito_low_integrated),
-                              high.thresholds = c(input$gene_high_integrated, input$mito_high_integrated))
-
-         stim <<- FilterCells(object = stim, subset.names = c("nGene", "percent.mito.stim"),
-                              low.thresholds = c(input$gene_low_integrated, input$mito_low_integrated),
-                              high.thresholds = c(input$gene_high_integrated, input$mito_high_integrated))
       }
       else if("nGene" %in% input$subsetNames_integrated){
 
         #print("c2")
+        
+        ctrl <<- subset(x = ctrl, subset = nFeature_RNA > gene_low_sel & nFeature_RNA < gene_high_sel)
+        
+        stim <<- subset(x = stim, subset = nFeature_RNA > gene_low_sel & nFeature_RNA < gene_high_sel)
 
-        ctrl <<- FilterCells(object = ctrl, subset.names = "nGene",
-                             low.thresholds = input$gene_low_integrated,
-                             high.thresholds = input$gene_high_integrated)
-
-        stim <<- FilterCells(object = stim, subset.names = "nGene",
-                             low.thresholds = input$gene_low_integrated,
-                             high.thresholds = input$gene_high_integrated)
       }
       else{
 
         #print("c3")
-
-        ctrl <<- FilterCells(object = ctrl, subset.names = "percent.mito.ctrl",
-                             low.thresholds = input$mito_low_integrated,
-                             high.thresholds = input$mito_high_integrated)
-
-        stim <<- FilterCells(object = stim, subset.names = "percent.mito.stim",
-                             low.thresholds = input$mito_low_integrated,
-                             high.thresholds = input$mito_high_integrated)
+        
+        ctrl <<- subset(x = ctrl, subset = percent.mito < mito_high_sel)
+        
+        stim <<- subset(x = stim, subset = percent.mito < mito_high_sel)
 
       }
 
-      ctrl <<- NormalizeData(object = ctrl, normalization.method = input$norm_methods_integrated,
-                             scale.factor = input$scale_integrated)
-      stim <<- NormalizeData(object = stim, normalization.method = input$norm_methods_integrated,
-                             scale.factor = input$scale_integrated)
-
-      if(length(input$vars_regress_integrated) > 0){
-        if("nUMI" %in% input$vars_regress_integrated && "percent.mito" %in% input$vars_regress_integrated){
-          ctrl <<- ScaleData(object = ctrl, vars.to.regress = c("nUMI", "percent.mito.ctrl"), display.progress = F)
-          stim <<- ScaleData(object = stim, vars.to.regress = c("nUMI", "percent.mito.stim"), display.progress = F)
-        }
-        else if("percent.mito" %in% input$vars_regress_integrated){
-          ctrl <<- ScaleData(object = ctrl, vars.to.regress = c("percent.mito.ctrl"), display.progress = F)
-          stim <<- ScaleData(object = stim, vars.to.regress = c("percent.mito.stim"), display.progress = F)
-        }
-        else{
-          ctrl <<- ScaleData(object = ctrl, vars.to.regress = input$vars_regress_integrated, display.progress = F)
-          stim <<- ScaleData(object = stim, vars.to.regress = input$vars_regress_integrated, display.progress = F)
-        }
-      }
-      else{
-        ctrl <<- ScaleData(ctrl, display.progress = F)
-        stim <<- ScaleData(stim, display.progress = F)
-      }
-
+      ctrl <<- NormalizeData(ctrl, verbose = FALSE)
+      stim <<- NormalizeData(stim, verbose = FALSE)
+      
+      ctrl <<- FindVariableFeatures(ctrl, selection.method = "vst", nfeatures = 2000)
+      stim <<- FindVariableFeatures(stim, selection.method = "vst", nfeatures = 2000)
+      
       setProgress(value = 1)
       shinyjs::hide("load_norm_integrated")
       shinyjs::show("check_norm_integrated")
@@ -806,125 +688,9 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
   }
 
   )# Normalization END
+  
 
-  # CCA
-  observeEvent(input$find_cca_integrated, {
-
-    shinyjs::show("load_cca_integrated")
-
-    output$cca_plots_integrated <- renderUI({
-
-      withSpinner(plotOutput(ns("plot_cca_integrated"), height = "450px"), type = getOption("spinner.type", default = 4))
-
-    }
-    )
-
-    output$cca_table_integrated <- renderUI({
-      withSpinner(DTOutput(ns("cca_genes_integrated")), type = getOption("spinner.type", default = 4))
-    }
-    )
-
-    withProgress(message = "Performing CCA ...",{
-
-      setProgress(value = 0.35)
-
-      ctrl <<- FindVariableGenes(object = ctrl, mean.function = input$mean_fun_integrated,
-                                 dispersion.function = input$disper_fun_integrated, x.low.cutoff = input$x_low_integrated,
-                                 x.high.cutoff = input$x_high_integrated, y.cutoff = input$y_cut_integrated,
-                                 do.plot = F)
-
-      stim <<- FindVariableGenes(object = stim, mean.function = input$mean_fun_integrated,
-                                 dispersion.function = input$disper_fun_integrated, x.low.cutoff = input$x_low_integrated,
-                                 x.high.cutoff = input$x_high_integrated, y.cutoff = input$y_cut_integrated,
-                                 do.plot = F)
-
-      g.1 <- head(rownames(ctrl@hvg.info), input$union_genes_integrated)
-      g.2 <- head(rownames(stim@hvg.info), input$union_genes_integrated)
-
-      genes.use <- unique(c(g.1, g.2))
-      genes.use <- intersect(genes.use, rownames(ctrl@scale.data))
-      genes.use <- intersect(genes.use, rownames(stim@scale.data))
-
-      setProgress(value = 0.65)
-
-      immune.combined <<- RunCCA(ctrl, stim, genes.use = genes.use, num.cc = input$cc_num,
-                                add.cell.id1 = "C", add.cell.id2 = "S")
-
-
-      setProgress(value = 1)
-
-      output$plot_cca_integrated <- renderPlot({
-        p2_integrated <<- DimPlot(object = immune.combined, reduction.use = "cca", group.by = "stim",
-                      pt.size = 0.5, do.return = TRUE)
-        p3_integrated <<- VlnPlot(object = immune.combined, features.plot = "CC1", group.by = "stim",
-                      do.return = TRUE)
-        plot_grid(p2_integrated, p3_integrated)
-      })
-
-      shinyjs::hide("load_cca_integrated")
-      shinyjs::show("check_cca_integrated")
-
-
-    })
-
-    ccaGenes <- capture.output(PrintDim(object = immune.combined, reduction.type = "cca", dims.print = input$cca_dim1_print:input$cca_dim2_print,
-                                         genes.print = input$cca_genes_print), type = "output")
-    ccaGenes <- gsub("\\D[[1-9]]", "", ccaGenes)
-    ccaGenes <- matrix(ccaGenes)
-    ccaGenes <- ccaGenes[!apply(ccaGenes == " \"\"", 1, all),]
-    ccaGenes <- unlist(strsplit(ccaGenes, " "))
-    ccaGenes <- matrix(ccaGenes)
-    ccaGenes <- matrix(ccaGenes[!apply(ccaGenes == "", 1, all),], nrow = 2*input$cca_genes_print+1)
-    ccaGenes <- data.frame(ccaGenes)
-    ccaGenes <- as.data.frame(sapply(ccaGenes, function(x) gsub("\"", "", x)))
-    colnames(ccaGenes) <- as.character(unlist(ccaGenes[1,]))
-    ccaGenes <- ccaGenes[-1,]
-
-    output$cca_genes_integrated <- renderDT(datatable(ccaGenes, rownames = FALSE, selection = "none"))
-
-  }
-
-  )# CCA END
-
-  # CCs
-  observeEvent(input$viz_ccs, {
-
-    output$ccs_heatmap <- renderUI({
-      withSpinner(plotOutput(ns("plot_ccs_heatmap"), height = "750px"), type = getOption("spinner.type", default = 4))
-    }
-    )
-
-    output$ccs_plot <- renderUI({
-      withSpinner(plotOutput(ns("plot_ccs"), height = "500px"), type = getOption("spinner.type", default = 4))
-    }
-    )
-
-    withProgress(message = "Plotting CCs ...",{
-
-      shinyjs::show("load_ccs")
-      setProgress(value = 0.35)
-
-      output$plot_ccs_heatmap <- renderPlot({
-        DimHeatmap(object = immune.combined, reduction.type = "cca", cells.use = input$ccs_cells_heatmap,
-                   dim.use = 1:input$ccs_dims_heatmap, do.balanced = TRUE)
-      })
-
-      output$plot_ccs <- renderPlot({
-        p4_integrated <<- MetageneBicorPlot(immune.combined, grouping.var = "stim", dims.eval = 1:input$dims_eval,
-                                display.progress = FALSE)
-      })
-
-      setProgress(value = 1)
-      shinyjs::hide("load_ccs")
-      shinyjs::show("check_ccs")
-    })
-
-  }
-
-  )# CCs END
-
-
-  # Align the CCA subspaces
+  # Perform integration
   observeEvent(input$viz_cca_align, {
 
     output$align_cca_plot <- renderUI({
@@ -936,41 +702,54 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
       withSpinner(plotOutput(ns("plot_cca_tsne"), height = "650px"), type = getOption("spinner.type", default = 4))
     }
     )
+    
+    output$ccs_side_plot <- renderUI({
+      withSpinner(plotOutput(ns("plot_cca_side"), height = "650px"), type = getOption("spinner.type", default = 4))
+    }
+    )
 
-    withProgress(message = "Plotting aligned CCA ...",{
+    withProgress(message = "Plotting UMAP ...",{
 
       shinyjs::show("load_cca_align")
 
       setProgress(value = 0.35)
-      immune.combined <<- AlignSubspace(immune.combined, reduction.type = "cca", grouping.var = "stim",
-                                       dims.align = 1:input$align_dims)
+      
+      dims <- isolate(as.numeric(input$align_dims))
+      resolution <- isolate(as.numeric(input$ccs_res))
 
-      output$plot_align_cca <- renderPlot({
-
-        p5_integrated <<- VlnPlot(object = immune.combined, features.plot = "ACC1", group.by = "stim",
-                      do.return = TRUE)
-        p6_integrated <<- VlnPlot(object = immune.combined, features.plot = "ACC2", group.by = "stim",
-                      do.return = TRUE)
-        plot_grid(p5_integrated, p6_integrated)
-
-      })
-
-      setProgress(value = 0.6)
-
-      immune.combined <<- RunTSNE(immune.combined, reduction.use = "cca.aligned", dims.use = 1:input$align_dims,
-                                  perplexity = input$ccs_perp, do.fast = T)
-
-      immune.combined <<- FindClusters(immune.combined, reduction.type = "cca.aligned",
-                                      resolution = input$ccs_res, dims.use = 1:input$align_dims)
-
+      immune.anchors <- FindIntegrationAnchors(object.list = list(ctrl, stim), dims = 1:dims)
+      immune.combined <<- IntegrateData(anchorset = immune.anchors, dims = 1:dims)
+      
+      DefaultAssay(immune.combined) <<- "integrated"
+      immune.combined <<- immune.combined
+      
+      # Run the standard workflow for visualization and clustering
+      #immune.combined <<- ScaleData(immune.combined, verbose = FALSE)
+      immune.combined <<- ScaleData(immune.combined, vars.to.regress = c("percent.mito"), verbose = FALSE)
+      #immune.combined <<- ScaleData(immune.combined, vars.to.regress = c("CC.Difference", "percent.mito"), verbose = FALSE)
+      immune.combined <<- RunPCA(immune.combined, npcs = 30, verbose = FALSE)
+      
+      setProgress(value = 0.65)
+      # UMAP and Clustering
+      immune.combined <<- RunUMAP(immune.combined, reduction = "pca", dims = 1:dims)
+      immune.combined <<- FindNeighbors(immune.combined, reduction = "pca", dims = 1:dims)
+      immune.combined <<- FindClusters(immune.combined, resolution = resolution)
+      
       setProgress(value = 0.8)
 
       output$plot_cca_tsne <- renderPlot({
 
-        p1 <- TSNEPlot(immune.combined, do.return = T, pt.size = 1, group.by = "stim")
-        p2 <- TSNEPlot(immune.combined, do.label = T, do.return = T, pt.size = 1)
-        plot_grid(p1, p2)
+        # Visualization
+        p1_dim <<- DimPlot(immune.combined, reduction = "umap", group.by = "stim")
+        p2_dim <<- DimPlot(immune.combined, reduction = "umap", label = TRUE)
+        plot_grid(p1_dim, p2_dim)
 
+      })
+      
+      output$plot_cca_side <- renderPlot({
+        # Visualization
+        p3_dim <<- DimPlot(immune.combined, reduction = "umap", split.by = "stim")
+        p3_dim
       })
 
       setProgress(value = 1)
@@ -981,8 +760,8 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
     output$old_name_cca_align <- renderUI({
 
       selectizeInput(ns("ccs_old_name"), label = "Select names to change: ",
-                     choices = levels(immune.combined@ident),
-                     selected = levels(immune.combined@ident)[1],
+                     choices = levels(x = immune.combined),
+                     selected = levels(x = immune.combined)[1],
                      multiple = TRUE)
     }
     )
@@ -990,8 +769,8 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
     output$id_con_genes <- renderUI({
 
       selectizeInput(ns("con_genes_id"), label="Find conserved markers of cluster:",
-                     choices = levels(immune.combined@ident),
-                     selected = levels(immune.combined@ident)[1],
+                     choices = levels(x = immune.combined),
+                     selected = levels(x = immune.combined)[1],
                      multiple = FALSE)
     }
     )
@@ -1000,8 +779,8 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
     output$id1_con_genes <- renderUI({
 
       selectizeInput(ns("con_genes_id1"), label="Find all markers of cluster:",
-                     choices = levels(immune.combined@ident),
-                     selected = levels(immune.combined@ident)[1],
+                     choices = levels(x = immune.combined),
+                     selected = levels(x = immune.combined)[1],
                      multiple = FALSE)
     }
     )
@@ -1009,8 +788,8 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
     output$id2_con_genes <- renderUI({
 
       selectizeInput(ns("con_genes_id2"), label="Distinguishing from clusters:",
-                     choices = levels(immune.combined@ident)[levels(immune.combined@ident) != input$con_genes_id1],
-                     selected = levels(immune.combined@ident)[levels(immune.combined@ident) != input$con_genes_id1][1],
+                     choices = levels(x = immune.combined)[levels(x = immune.combined) != input$con_genes_id1],
+                     selected = levels(x = immune.combined)[levels(x = immune.combined) != input$con_genes_id1][1],
                      multiple = TRUE)
     }
     )
@@ -1018,8 +797,8 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
     output$id_con_genes_diff <- renderUI({
 
       selectizeInput(ns("con_genes_id_diff"), label="Find average expression of cluster:",
-                     choices = levels(immune.combined@ident),
-                     selected = levels(immune.combined@ident)[1],
+                     choices = levels(x = immune.combined),
+                     selected = levels(x = immune.combined)[1],
                      multiple = FALSE)
     }
     )
@@ -1027,7 +806,7 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
 
 
   }
-  )# Align the CCA subspaces END
+  )# Perform integration END
 
   # Assign new names
   observeEvent(input$assign_ccs_names, {
@@ -1037,7 +816,7 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
     }
     )
 
-    withProgress(message = "Plotting TSNE ...",{
+    withProgress(message = "Plotting UMAP ...",{
 
       shinyjs::show("load_ccs_names")
       setProgress(value = 0.35)
@@ -1048,14 +827,15 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
 
       validate(need(length(current.cluster.ids) == length(new.cluster.ids), "Error: Number of names should match!"))
 
-      immune.combined@ident <- plyr::mapvalues(x = immune.combined@ident, from = current.cluster.ids, to = new.cluster.ids)
-
+      Idents(object = immune.combined) <- plyr::mapvalues(x = Idents(object = immune.combined), 
+                                                         from = current.cluster.ids, 
+                                                         to = new.cluster.ids)
       immune.combined <<- immune.combined
 
       output$plot_cca_tsne <- renderPlot({
 
-        TSNEPlot(object = immune.combined, do.label = T, do.hover = FALSE, pt.size = 2)
-
+        DimPlot(object = immune.combined, reduction = "umap", label = TRUE, pt.size = 1.5)
+        
       })
 
       setProgress(value = 1)
@@ -1066,8 +846,8 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
     output$old_name_cca_align <- renderUI({
 
       selectizeInput(ns("ccs_old_name"), label = "Select names to change: ",
-                     choices = levels(immune.combined@ident),
-                     selected = levels(immune.combined@ident)[1],
+                     choices = levels(x = immune.combined),
+                     selected = levels(x = immune.combined)[1],
                      multiple = TRUE)
     }
     )
@@ -1075,8 +855,8 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
     output$id_con_genes <- renderUI({
 
       selectizeInput(ns("con_genes_id"), label="Find conserved markers of cluster:",
-                     choices = levels(immune.combined@ident),
-                     selected = levels(immune.combined@ident)[1],
+                     choices = levels(x = immune.combined),
+                     selected = levels(x = immune.combined)[1],
                      multiple = FALSE)
     }
     )
@@ -1084,8 +864,8 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
     output$id1_con_genes <- renderUI({
 
       selectizeInput(ns("con_genes_id1"), label="Find all markers of cluster:",
-                     choices = levels(immune.combined@ident),
-                     selected = levels(immune.combined@ident)[1],
+                     choices = levels(x = immune.combined),
+                     selected = levels(x = immune.combined)[1],
                      multiple = FALSE)
     }
     )
@@ -1093,8 +873,8 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
     output$id2_con_genes <- renderUI({
 
       selectizeInput(ns("con_genes_id2"), label="Distinguishing from clusters:",
-                     choices = levels(immune.combined@ident)[levels(immune.combined@ident) != input$con_genes_id1],
-                     selected = levels(immune.combined@ident)[levels(immune.combined@ident) != input$con_genes_id1][1],
+                     choices = levels(x = immune.combined)[levels(x = immune.combined) != input$con_genes_id1],
+                     selected = levels(x = immune.combined)[levels(x = immune.combined) != input$con_genes_id1][1],
                      multiple = TRUE)
     }
     )
@@ -1102,8 +882,8 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
     output$id_con_genes_diff <- renderUI({
 
       selectizeInput(ns("con_genes_id_diff"), label="Find average expression of cluster:",
-                     choices = levels(immune.combined@ident),
-                     selected = levels(immune.combined@ident)[1],
+                     choices = levels(x = immune.combined),
+                     selected = levels(x = immune.combined)[1],
                      multiple = FALSE)
     }
     )
@@ -1164,7 +944,7 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
       }
       else{
         cluster.markers <- FindAllMarkers(object = immune.combined, only.pos = TRUE, min.pct = 0.25,
-                                          thresh.use = 0.25)
+                                          logfc.threshold = 0.25)
 
         cluster.markers <- cluster.markers %>% group_by(cluster) %>% top_n(input$top_markers_con, avg_logFC)
 
@@ -1174,7 +954,7 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
         )
 
         output$heatmap_con_genes <- renderPlot({
-          DoHeatmap(object = immune.combined, genes.use = cluster.markers$gene, slim.col.label = TRUE, remove.key = TRUE)
+          DoHeatmap(object = immune.combined, features = cluster.markers$gene) + NoLegend()
         })
 
         is.num <- sapply(cluster.markers, is.numeric)
@@ -1196,8 +976,8 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
       output$vlnplot_con_genes <- renderPlot({
 
         validate(need(length(input$table_ccs_genes_rows_selected) != "0", "Error: Please select at least one feature!"))
-        p7_integrated <<- VlnPlot(object = immune.combined, x.lab.rot = TRUE,
-                features.plot = cluster.markers$gene[input$table_ccs_genes_rows_selected])
+        p7_integrated <<- VlnPlot(object = immune.combined,
+                features = cluster.markers$gene[input$table_ccs_genes_rows_selected])
         p7_integrated
       })
 
@@ -1207,9 +987,7 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
         
         validate(need(length(input$table_ccs_genes_rows_selected) != "0", "Error: Please select at least one feature!"))
         FeaturePlot(object = immune.combined,
-                    features.plot = cluster.markers$gene[input$table_ccs_genes_rows_selected],
-                    cols.use = c("grey", "blue"),
-                    reduction.use = "tsne")
+                    features = cluster.markers$gene[input$table_ccs_genes_rows_selected])
       })
 
       output$ridgeplot_con_genes <- renderPlot({
@@ -1218,7 +996,7 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
 
         validate(need(length(input$table_ccs_genes_rows_selected) != "0", "Error: Please select at least one feature!"))
         RidgePlot(object = immune.combined,
-                  features.plot = cluster.markers$gene[input$table_ccs_genes_rows_selected], nCol = 2)
+                  features = cluster.markers$gene[input$table_ccs_genes_rows_selected], ncol = 2)
       })
 
 
@@ -1228,8 +1006,8 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
       output$vlnplot_con_genes <- renderPlot({
 
         validate(need(length(input$table_ccs_genes_rows_selected) != "0", "Error: Please select at least one feature!"))
-        p7_integrated <<- VlnPlot(object = immune.combined, x.lab.rot = TRUE,
-                features.plot = rownames(cluster.markers)[input$table_ccs_genes_rows_selected])
+        p7_integrated <<- VlnPlot(object = immune.combined,
+                features = rownames(cluster.markers)[input$table_ccs_genes_rows_selected])
         p7_integrated
       })
 
@@ -1239,9 +1017,7 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
         
         validate(need(length(input$table_ccs_genes_rows_selected) != "0", "Error: Please select at least one feature!"))
         FeaturePlot(object = immune.combined,
-                    features.plot = rownames(cluster.markers)[input$table_ccs_genes_rows_selected],
-                    cols.use = c("grey", "blue"),
-                    reduction.use = "tsne")
+                    features = rownames(cluster.markers)[input$table_ccs_genes_rows_selected])
       })
 
       output$ridgeplot_con_genes <- renderPlot({
@@ -1250,7 +1026,7 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
 
         validate(need(length(input$table_ccs_genes_rows_selected) != "0", "Error: Please select at least one feature!"))
         RidgePlot(object = immune.combined,
-                  features.plot = rownames(cluster.markers)[input$table_ccs_genes_rows_selected], nCol = 2)
+                  features = rownames(cluster.markers)[input$table_ccs_genes_rows_selected], ncol = 2)
       })
 
     }
@@ -1285,8 +1061,12 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
       setProgress(value = 0.35)
 
       # Feature plot (conserved markers)
-      nk.markers <- FindConservedMarkers(immune.combined, ident.1 = input$con_genes_id, grouping.var = "stim",
-                                         print.bar = FALSE)
+      
+      DefaultAssay(immune.combined) <<- "RNA"
+      Idents(immune.combined) <<- "seurat_clusters"
+      immune.combined <<- immune.combined
+      
+      nk.markers <- FindConservedMarkers(immune.combined, ident.1 = input$con_genes_id, grouping.var = "stim")
 
       nk.markers <- nk.markers[, -c(5, 10, 11, 12)]
 
@@ -1305,19 +1085,19 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
         
         validate(need(length(input$table_con_genes_rows_selected) != "0", "Error: Please select at least one feature!"))
         FeaturePlot(object = immune.combined,
-                    features.plot = rownames(nk.markers)[input$table_con_genes_rows_selected],
-                    min.cutoff = "q9",
-                    cols.use = c("lightgrey", "blue"),
-                    pt.size = 0.5)
+                    features = rownames(nk.markers)[input$table_con_genes_rows_selected],
+                    min.cutoff = "q9", pt.size = 1)
       })
 
       # SplitDotPlot
       output$splitdotplot_con_genes <- renderPlot({
 
         validate(need(length(input$table_con_genes_rows_selected) != "0", "Error: Please select at least one feature!"))
-        sdp <<- SplitDotPlotGG(immune.combined, genes.plot = rev(rownames(nk.markers)[input$table_con_genes_rows_selected]),
-                              cols.use = c("blue", "red"),
-                              x.lab.rot = T, plot.legend = T, dot.scale = 8, do.return = T, grouping.var = "stim")
+        
+        sdp <<- DotPlot(immune.combined, features = rev(rownames(nk.markers)[input$table_con_genes_rows_selected]), 
+                cols = c("blue", "red"), dot.scale = 8, 
+                split.by = "stim") + RotatedAxis()
+        sdp
       })
 
       setProgress(value = 1)
@@ -1348,23 +1128,29 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
     }
     )
 
+    output$ccs_vlnplot_diff <- renderUI({
+      withSpinner(plotOutput(ns("vlnplot_ccs_diff"), height = "750px"), type = getOption("spinner.type", default = 4))
+    }
+    )
+    
     withProgress(message = "Generating plots ...",{
 
       shinyjs::show("load_ccs_diff")
       setProgress(value = 0.35)
 
-      t.cells <- SubsetData(immune.combined, ident.use = input$con_genes_id_diff, subset.raw = T)
-      t.cells <- SetAllIdent(t.cells, id = "stim")
-      avg.t.cells <- log1p(AverageExpression(t.cells, show.progress = FALSE))
+      t.cells <- subset(immune.combined, idents = input$con_genes_id_diff)
+      Idents(t.cells) <- "stim"
+      avg.t.cells <- log1p(AverageExpression(t.cells, verbose = FALSE)$RNA)
       avg.t.cells$gene <- rownames(avg.t.cells)
 
-      immune.combined@meta.data$celltype.stim <- paste0(immune.combined@ident, "_",
-                                                          immune.combined@meta.data$stim)
-      immune.combined <- StashIdent(immune.combined, save.name = "celltype")
-      immune.combined <- SetAllIdent(immune.combined, id = "celltype.stim")
+      immune.combined$celltype.stim <- paste(Idents(immune.combined), immune.combined$stim, sep = "_")
+      immune.combined$celltype <- Idents(immune.combined)
+      Idents(immune.combined) <- "celltype.stim"
+      immune.combined <<- immune.combined
+      
       b.interferon.response <- FindMarkers(immune.combined, ident.1 = paste0(input$con_genes_id_diff, "_STIM"),
                                            ident.2 = paste0(input$con_genes_id_diff, "_CTRL"),
-                                           print.bar = FALSE)
+                                           verbose = FALSE)
 
       is.num <- sapply(b.interferon.response, is.numeric)
       b.interferon.response[is.num] <- lapply(b.interferon.response[is.num], round, 3)
@@ -1395,16 +1181,29 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
                                                           options = list(lengthMenu = c(5, 6, 7), pageLength = 5)))
       })
 
-      # FeatureHeatmap
+      # FeaturePlots
       output$heatmap_ccs_diff <- renderPlot({
 
         features_heatmap <<- rownames(b.interferon.response)[input$table_acs_genes_rows_selected]
         
         validate(need(length(input$table_acs_genes_rows_selected) != "0", "Error: Please select at least one feature!"))
-        FeatureHeatmap(immune.combined,
-                       features.plot = rownames(b.interferon.response)[input$table_acs_genes_rows_selected],
-                       group.by = "stim", pt.size = 0.5, key.position = "top",
-                       max.exp = 3)
+        FeaturePlot(immune.combined,
+                    features = rownames(b.interferon.response)[input$table_acs_genes_rows_selected],
+                    split.by = "stim", pt.size = 1.5, max.cutoff = 3, 
+                    cols = c("grey", "red"))
+      })
+      
+      # VlnPlot
+      output$vlnplot_ccs_diff <- renderPlot({
+        
+        features_vlnplot <<- rownames(b.interferon.response)[input$table_acs_genes_rows_selected]
+        
+        validate(need(length(input$table_acs_genes_rows_selected) != "0", "Error: Please select at least one feature!"))
+        
+        plots <<- VlnPlot(immune.combined, features = rownames(b.interferon.response)[input$table_acs_genes_rows_selected], 
+                         split.by = "stim", group.by = "celltype", 
+                         pt.size = 0, combine = FALSE)
+        CombinePlots(plots = plots, ncol = 1)
       })
 
       setProgress(value = 1)
@@ -1448,7 +1247,7 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
       shinyjs::show("load_read_integrated")
       setProgress(value = 0.35)
       
-      load_File <- isolate(as.character(parseFilePaths(volumes, input$normal_obj_integrated)[4]))
+      load_File <- isolate(as.character(parseFilePaths(volumes, input$integrated_obj)[4]))
       
       immune.combined <<- readRDS(load_File) 
       
@@ -1474,32 +1273,26 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
     switch(input$psave_select_integrated,
            "QC" = p1_integrated,
            "GenePlot" = {
-             par(mfrow = c(1, 2))
-             GenePlot(object = pbmc.combined, gene1 = "nUMI", gene2 = "nGene")
-             GenePlot(object = pbmc.combined, gene1 = "nUMI", gene2 = "percent.mito")
+             gp1 <- FeatureScatter(object = pbmc.combined, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") + NoLegend()
+             gp2 <- FeatureScatter(object = pbmc.combined, feature1 = "nCount_RNA", feature2 = "percent.mito") + NoLegend()
+             CombinePlots(plots = list(gp1, gp2))
            },
-           "CCA_plot" = plot_grid(p2_integrated, p3_integrated),
-           "MetageneBicorPlot" = p4_integrated,
-           "DimHeatmap" = DimHeatmap(object = immune.combined, reduction.type = "cca", cells.use = input$ccs_cells_heatmap,
-                                     dim.use = 1:input$ccs_dims_heatmap, do.balanced = TRUE),
-           "CCA_aligned" = plot_grid(p5_integrated, p6_integrated),
-           "TSNEPlot" = TSNEPlot(immune.combined, do.label = T, do.hover = FALSE, pt.size = 1.5),
+           "CCA_plot" = plot_grid(p1_dim, p2_dim),
+           "CCA_side" = p3_dim,
            "VlnPlot_markers" = p7_integrated,
            "FeaturePlot" = FeaturePlot(object = immune.combined,
-                                       features.plot = features_plot_integrated,
-                                       cols.use = c("grey", "blue"),
-                                       reduction.use = "tsne"),
+                                       features = features_plot_integrated),
            "RidgePlot" = RidgePlot(object = immune.combined,
-                                   features.plot = features_plot_integrated, nCol = 2),
+                                   features = features_plot_integrated, ncol = 2),
            "Features_conserved" = FeaturePlot(object = immune.combined,
-                                       features.plot = features_plot_conserved,
-                                       cols.use = c("grey", "blue"),
-                                       reduction.use = "tsne"),
+                                       features = features_plot_conserved),
            "SplitDotPlotGG" = sdp,
            "Scatter_plot" = p8_integrated,
-           "FeatureHeatmap" = FeatureHeatmap(immune.combined, features.plot = features_heatmap, 
-                                             group.by = "stim", pt.size = 0.25, key.position = "top", 
-                                             max.exp = 3)
+           "FeatureHeatmap" = FeaturePlot(immune.combined,
+                                          features = features_heatmap,
+                                          split.by = "stim", pt.size = 1.5, max.cutoff = 3, 
+                                          cols = c("grey", "red")),
+           "VlnPlot_side" = CombinePlots(plots = plots, ncol = 1)
     )
   })
   
@@ -1508,32 +1301,26 @@ seurat_integrated_Server <- function(input, output, session, fileRoot = NULL) {
     switch(input$psave_select_integrated,
            "QC" = p1_integrated,
            "GenePlot" = {
-             par(mfrow = c(1, 2))
-             GenePlot(object = pbmc.combined, gene1 = "nUMI", gene2 = "nGene")
-             GenePlot(object = pbmc.combined, gene1 = "nUMI", gene2 = "percent.mito")
+             gp1 <- FeatureScatter(object = pbmc.combined, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") + NoLegend()
+             gp2 <- FeatureScatter(object = pbmc.combined, feature1 = "nCount_RNA", feature2 = "percent.mito") + NoLegend()
+             CombinePlots(plots = list(gp1, gp2))
            },
-           "CCA_plot" = plot_grid(p2_integrated, p3_integrated),
-           "MetageneBicorPlot" = p4_integrated,
-           "DimHeatmap" = DimHeatmap(object = immune.combined, reduction.type = "cca", cells.use = input$ccs_cells_heatmap,
-                                     dim.use = 1:input$ccs_dims_heatmap, do.balanced = TRUE),
-           "CCA_aligned" = plot_grid(p5_integrated, p6_integrated),
-           "TSNEPlot" = TSNEPlot(immune.combined, do.label = T, do.hover = FALSE, pt.size = 1.5),
+           "CCA_plot" = plot_grid(p1_dim, p2_dim),
+           "CCA_side" = p3_dim,
            "VlnPlot_markers" = p7_integrated,
            "FeaturePlot" = FeaturePlot(object = immune.combined,
-                                       features.plot = features_plot_integrated,
-                                       cols.use = c("grey", "blue"),
-                                       reduction.use = "tsne"),
+                                       features = features_plot_integrated),
            "RidgePlot" = RidgePlot(object = immune.combined,
-                                   features.plot = features_plot_integrated, nCol = 2),
+                                   features = features_plot_integrated, ncol = 2),
            "Features_conserved" = FeaturePlot(object = immune.combined,
-                                              features.plot = features_plot_conserved,
-                                              cols.use = c("grey", "blue"),
-                                              reduction.use = "tsne"),
+                                              features = features_plot_conserved),
            "SplitDotPlotGG" = sdp,
            "Scatter_plot" = p8_integrated,
-           "FeatureHeatmap" = FeatureHeatmap(immune.combined, features.plot = features_heatmap, 
-                                             group.by = "stim", pt.size = 0.25, key.position = "top", 
-                                             max.exp = 3)
+           "FeatureHeatmap" = FeaturePlot(immune.combined,
+                                          features = features_heatmap,
+                                          split.by = "stim", pt.size = 1.5, max.cutoff = 3, 
+                                          cols = c("grey", "red")),
+           "VlnPlot_side" = CombinePlots(plots = plots, ncol = 1)
     )
   }
   

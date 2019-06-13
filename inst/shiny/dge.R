@@ -339,8 +339,8 @@ cat("#!/bin/bash
 }
   
 # fastqtoSam.sh
-r1Path <- system(paste("find", seqPath, "-type f -print | grep '1.fastq\\|1.fq'"), intern = TRUE)
-r2Path <- system(paste("find", seqPath, "-type f -print | grep '2.fastq\\|2.fq'"), intern = TRUE)
+r1Path <- system(paste("find", seqPath, "-type f -size +1G -print | grep '1.fastq\\|1.fq'"), intern = TRUE)
+r2Path <- system(paste("find", seqPath, "-type f -size +1G -print | grep '2.fastq\\|2.fq'"), intern = TRUE)
 
 sh_head("fastqToSam", ncores, mem, timelimit, mailType, Email)
 cat(paste("java -jar ", picardPath, "/picard.jar", " \\", "\n", sep = ""),
@@ -496,9 +496,7 @@ generate_sh_new <- function(){
         paste("#SBATCH --mem=", mem, "g", "\n", sep=""),
         paste("#SBATCH --time=", timelimit, ":00:00", "\n", sep=""),
         paste("#SBATCH --mail-type=", mailType, "\n", sep=""),
-        paste("#SBATCH --mail-user=", email, "\n", sep=""),
-        paste("#SBATCH -o $s.%%j.out\n", sep=""),
-        paste("#SBATCH -e $s.%%j.err", "\n\n\n\n", sep=""),
+        paste("#SBATCH --mail-user=", email, "\n\n\n\n", sep=""),
         sep = "", file = file.path(scriptPath, paste(filename, ".sh", sep = "")))
   }
   
