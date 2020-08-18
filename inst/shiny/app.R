@@ -19,8 +19,8 @@ require(monocle) # if (!requireNamespace("BiocManager", quietly = TRUE));install
 #library(reticulate)
 #conda_create("r-reticulate")
 #reticulate::py_install(packages = 'umap-learn')
-require(reticulate)
-use_condaenv("r-reticulate")
+#require(reticulate)
+#use_condaenv("r-reticulate")
 
 #reticulate::py_install(packages = 'mlxtend')
 
